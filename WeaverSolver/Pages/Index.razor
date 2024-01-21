@@ -1,5 +1,11 @@
 ﻿@page "/"
 @inject HttpClient Http
+@using MudBlazor
+@using System;
+@using System.IO;
+@using System.Net.Http;
+@using System.Reflection;
+@using System.Threading.Tasks;
 
 <MudMainContent>
     <MudContainer>
@@ -8,7 +14,7 @@
                 <div class="start-row-container">
                     <div class="row start-row">
                         <!-- Top input row for letters -->
-                        @if (wordLength == 4)
+                        @if (wordLength == 4 && topRowValues.Count == 4 && topRowRefs.Count == 4)
                         {
                             <input type="text" maxlength="1" class="block start-block"
                                 @bind="topRowValues[0]"
@@ -34,7 +40,7 @@
                                 @onkeydown="e => HandleBackspace(e, 3, true)"
                                 @ref="topRowRefs[3]">
                         }
-                        else
+                        else if (wordLength == 5 && topRowValues.Count == 5 && topRowRefs.Count == 5)
                         {
                             <input type="text" maxlength="1" class="block start-block"
                                 @bind="topRowValues[0]"
@@ -65,18 +71,7 @@
                                 @oninput="(e) => HandleInput(e, 4, true)"
                                 @onkeydown="e => HandleBackspace(e, 4, true)"
                                 @ref="topRowRefs[4]">
-                            }
-                        @*
-                        @for (int i = 0; i < topRowValues.Count; i++)
-                        {
-                        <input type="text" maxlength="1" class="block start-block"
-                        @bind="topRowValues[i]"
-                        @oninput="(e) => HandleInput(e, i, true)"
-                        @onkeydown="e => HandleBackspace(e, i,true)"
-                        @ref="topRowRefs[i]">
                         }
-                        *@
-                        
                     </div>
                 </div>
                 <div class="middle-row-container">
@@ -89,10 +84,7 @@
                                 <div class="row">
                                     @foreach (char letter in word)
                                     {
-                                        if (word != null)
-                                        {
-                                            <div class="block middle-block">@letter</div>
-                                        }
+                                        <div class="block middle-block">@letter</div>
                                     }
                                 </div>
                             }
@@ -124,8 +116,7 @@
                 <div class="end-row-container">
                     <div class="row end-row">
                         <!-- Bottom input row for letters -->
-
-                        @if(wordLength == 4)
+                        @if (wordLength == 4 && bottomRowValues.Count == 4 && bottomRowRefs.Count == 4)
                         {
                             <input type="text" maxlength="1" class="block end-block"
                                 @bind="bottomRowValues[0]"
@@ -151,7 +142,7 @@
                                 @onkeydown="e => HandleBackspace(e, 3, false)"
                                 @ref="bottomRowRefs[3]">
                         }
-                        else
+                        else if (wordLength == 5 && bottomRowValues.Count == 5 && bottomRowRefs.Count == 5)
                         {
                             <input type="text" maxlength="1" class="block end-block"
                                 @bind="bottomRowValues[0]"
@@ -183,16 +174,6 @@
                                 @onkeydown="e => HandleBackspace(e, 4, false)"
                                 @ref="bottomRowRefs[4]">
                         }
-                        @*
-                        @for (int i = 0; i < bottomRowValues.Count; i++)
-                        {
-                        <input type="text" maxlength="1" class="block end-block"
-                        @bind="bottomRowValues[i]"
-                        @oninput="(e) => HandleInput(e, i, false)"
-                        @onkeydown="e => HandleBackspace(e, i, false)"
-                        @ref="bottomRowRefs[i]">
-                        }
-                        *@
                     </div>
                 </div>
             </div>
@@ -224,7 +205,8 @@
     private List<ElementReference> topRowRefs = new();
     private List<ElementReference> bottomRowRefs = new();
     private List<string> solutionResult = new List<string>();
-    // Value="wordLength" ValueChanged="HandleReset"
+    string words4Response = string.Empty;
+    string words5Response = string.Empty;
 
     List<string> words4 = new();
     List<string> words5 = new();
@@ -234,8 +216,8 @@
         try
         {
             // Use await to asynchronously fetch the files
-            var words4Response = await Http.GetStringAsync("files/words4.txt");
-            var words5Response = await Http.GetStringAsync("files/words5.txt");
+            words4Response = await Http.GetStringAsync("files/words4.txt");
+            words5Response = await Http.GetStringAsync("files/words5.txt");
 
             // Split the responses into lists
             words4 = words4Response.Split(", ").ToList();
